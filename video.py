@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 from PIL import Image
 from tqdm import trange
-from ascii import to_ascii
+from ascii import AsciiConverter
 
 
 
@@ -20,6 +20,7 @@ pth = 'b2a924472c4b43a1a70563637c6ad063.MOV'
 pth = 'video_input/test.MOV'
 pth = 'dolorian.MP4'
 pth = 'video_input/korosh.MP4'
+pth = 'video_input/watergate.mov'
 # pth = 'fireworks2.MOV'
 cap = cv2.VideoCapture(pth)
 
@@ -31,21 +32,27 @@ fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 fps = 30
 chars_per_line = 165
 
+converter = AsciiConverter(character_width=chars_per_line, color="w", weight=5, exposure=0.35)
 
 for i in trange(frame_count):
-    frames_left,frame = cap.read()
+    frames_left, frame = cap.read()
 
     if not frames_left:
         break
 
     grayscale_frame = process_frame(frame, chars_per_line)
 
+    ## KEEP SIZES INTERNAL TO CLASS
     if i==0:
-        size = frame.shape[:2][::-1]
+        ascii_frame = converter.pixels_to_characters(grayscale_frame, size)
+        size = ascii_frame.shape
         out = cv2.VideoWriter(f"{filename}.mp4", fourcc, fps, size)
-
-    ascii_frame = to_ascii(grayscale_frame, exposure=0.35, size=size)
+    else:
+        ascii_frame = converter.pixels_to_characters(grayscale_frame, size)
+    
+    ## 
     ascii_frame = cv2.cvtColor(ascii_frame, cv2.COLOR_GRAY2BGR)
+
 
     # print(ascii_frame.shape)
     # print(size)
@@ -54,3 +61,5 @@ for i in trange(frame_count):
 
 out.release()
 cap.release()
+print(f"done")
+
