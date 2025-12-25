@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ascii"
+version = "1.0.0"
+description = "Produce ascii character representations of images and videos."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Greyson Brothers", email = "greysonbrothers@gmail.com" }
+]
+
+dependencies = [
+    "tqdm",
+    "numpy",
+    "torch",
+    "pillow",
+    "argparse",
+    "opencv-python",
+]
+[tool.setuptools.packages.find]
+include = ["ascii"]
+# exclude = ["content"]
+
+[project.scripts]
+asciify = "ascii.asciify:main"
+
+[project.urls]
+Homepage = "https://github.com/agbrothers/ascii"
+Issues = "https://github.com/agbrothers/ascii/issues"

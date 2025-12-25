@@ -132,6 +132,7 @@ dmypy.json
 *.icloud
 custom/
 deprecated/
-images/
-videos/
+content/
 .vscode/
+uv.lock
+*.DS_Store
