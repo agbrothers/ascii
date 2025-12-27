@@ -6,8 +6,8 @@ from tqdm import trange
 from PIL import Image, ImageDraw, ImageFont
 
 from ascii.kernels import KERNELS
-from ascii.palattes import PALATTES
-from ascii.preprocess import expose_contrast
+from ascii.palettes import PALETTES
+from ascii.preprocess import expose_contrast, lift_shadows
 
 
 class AsciiConverter:
@@ -19,7 +19,7 @@ class AsciiConverter:
     def __init__(
         self,
         path: str,
-        ascii_palatte: str,
+        ascii_palette: str,
         ascii_chars: str,
         chars_per_line: int,
         color: str,
@@ -29,6 +29,7 @@ class AsciiConverter:
         contrast: float,
         font: ImageFont.FreeTypeFont,
         output_mode: str,
+        **kwargs,
     ):
         # PATHING
         output_path, extension = os.path.splitext(path)
@@ -39,9 +40,9 @@ class AsciiConverter:
         # PARAMETERS
         self.chars_per_line = chars_per_line
         if ascii_chars is not None:
-            self.palatte = np.array([*ascii_chars])
+            self.palette = np.array([*ascii_chars])
         else:
-            self.palatte = np.array(PALATTES[ascii_palatte.lower()])
+            self.palette = np.array(PALETTES[ascii_palette.lower()])
 
         is_white = 1 if color == "w" else 0
         self.brightness = brightness
@@ -53,68 +54,80 @@ class AsciiConverter:
         self.character_color = is_white * 255
         self.background_color = (not is_white) * 255
 
-        ## FAST RENDERING: GLYPH ATLASS + LOOKUP
+        ## GET MAX CHARACTER WIDTH AND HEIGHT
         W_mx = H_mx = 0
-        for char in self.palatte:
+        for char in self.palette:
             x0, y0, x1, y1 = font.getbbox(char)
             W_mx = max(W_mx, x1 - x0)
             H_mx = max(H_mx, y1 - y0)
         self.glyph_w, self.glyph_h = W_mx, H_mx
 
-        # build atlas tensors:
-        # - glyphs: (N, H, W) uint8
-        # - byte_to_idx: (256,) int16 mapping ASCII code -> index in glyphs
-        self.glyphs = self.get_glyph_atlas()
-
-        ## EMBED ASCII CHARACTERS
-        self.char_embd = self.embd_char(font)
-
-        ## CONVLUTION
-        kernel = KERNELS["default"](weight)
+        ## CONVOLUTION MAPPING PIXELS TO QUERIES
+        # kernel = KERNELS["default"](weight)
+        # kernel = KERNELS["flatten"](
+        kernel = KERNELS["shape"](
+            weight=weight,
+            width=self.glyph_w, 
+            height=self.glyph_h
+        )
         self.conv = torch.nn.Conv2d(
             in_channels=kernel.shape[1], 
             out_channels=kernel.shape[0], 
             kernel_size=kernel.shape[-2:], 
             stride=kernel.shape[-2:], 
-            padding=2,
+            padding=0,
         )
         with torch.no_grad():
             self.conv.weight[:] = kernel
+            self.conv.bias[:] = 0
+
+        ## THE RENDERED CHARACTERS ARE OUR MEMORY VALUES
+        self.char_values = self.render_char()
+
+        ## DERIVE KEYS FROM EACH CHARACTER'S PIXELS
+        self.char_keys = self.embed_char(self.char_values) 
         return
 
 
-    def char_kernel(self, char_img: np.ndarray):
-        w_third = round(0.333*self.glyph_w)
-        h_third = round(0.333*self.glyph_h)
-        brightness_conv = [
-            np.mean(char_img[:h_third]),                              # TOP MIDDLE
-            np.mean(char_img[:, :w_third]),                           # MID LEFT
-            np.mean(char_img[h_third-1:2*h_third+1, w_third-1:2*w_third+1]),  # CENTER
-            np.mean(char_img[:, 2*w_third:]),                         # MID RIGHT
-            np.mean(char_img[2*h_third:]),                            # BOTTOM MIDDLE
-            self.weight * np.mean(char_img)                           # MEAN IMAGE BRIGHTNESS
-        ]
-        return brightness_conv
+    def render_char(self) -> np.ndarray:
+        ## RENDER EACH GLYPH ONCE INTO A SMALL TILE: (N, H, W)
+        glyphs = np.zeros((len(self.palette), self.glyph_h, self.glyph_w), dtype=np.uint8)
+        for i,char in enumerate(self.palette):
+            im = Image.new("L", size=(self.glyph_w, self.glyph_h), color=self.background_color)
+            d = ImageDraw.Draw(im)
+            d.text((0,0), char, fill=self.character_color, font=self.font)
+            glyphs[i] = np.asarray(im, dtype=np.uint8)
+        return torch.Tensor(glyphs).to(torch.uint8)
 
 
-    def draw_palatte(self, fontsize=24):
-        font = ImageFont.truetype("ascii/fonts/Menlo-Regular.ttf", size=fontsize)
-        img = Image.new(mode="1", size=(self.glyph_w*len(self.palatte), self.glyph_h), color=self.background_color)
-        d = ImageDraw.Draw(img)
-        d.text((0, 0), "".join(self.palatte), fill=self.character_color, font=font)
-        img.show()
-        return
+    def embed_char(self, glyphs:torch.Tensor):
+        glyphs = torch.clamp(glyphs.to(torch.float) / 255, 0, 1)        
+        return self.conv(glyphs[:, None])[..., 0,0]
 
 
-    def embd_char(self, font):
-        brightness = []
-        for char in self.palatte:
-            img = Image.new(mode="1", size=(self.glyph_w, self.glyph_h), color=self.background_color)
-            d = ImageDraw.Draw(img)
-            d.text((0, 0), str(char), fill=self.character_color, font=font)
-            img = np.asarray(img)
-            brightness.append(self.char_kernel(img))
-        return torch.Tensor(brightness)
+    def recall_char(self, img: torch.Tensor) -> torch.IntTensor:
+        ## FOR EACH PIXEL PATCH, GENERATE A QUERY VECTOR VIA CONVOLUTION
+        img_queries = self.conv(img[None, None, ...])[0].permute(1, 2, 0)
+        ## LOOK UP THE CHARACTER WITH THE GREATEST SIMILARITY 
+        # char_sim = img_queries @ (self.char_keys/self.char_keys.norm(dim=-1, keepdim=True)).T            # (dot product)
+        char_sim = -torch.cdist(img_queries, self.char_keys) # (negative euclidean distance)
+        ## RETURN IDX OF THE MOST SIMILAR CHARACTER FOR EACH PATCH
+        return char_sim.argmax(dim=-1) 
+
+
+    def render(self, char_idxs:torch.IntTensor) -> np.ndarray:
+        """
+        Fast renderer: given (rows, cols) palette indices, return uint8 grayscale frame.
+        """
+        ## char_idxs: (rows, cols, idx) values in [0, N)
+        ## (rows, cols, gh, gw)
+        tiles = self.char_values[char_idxs]
+        ## STITCH TILES -> (rows*gh, cols*gw)
+        frame = tiles.transpose(2, 1).reshape(
+            char_idxs.shape[0] * self.glyph_h,
+            char_idxs.shape[1] * self.glyph_w,
+        )
+        return frame.numpy()
 
 
     def reshape_image(self, img:Image):
@@ -143,67 +156,6 @@ class AsciiConverter:
         ## RESIZE GRAYSCALE IMAGE TO CONV INPUT SIZE
         img = img.resize((W_in, H_in), resample=Image.BILINEAR)
         return np.asarray(img)
-
-
-    def get_glyph_atlas(self) -> np.ndarray:
-        ## MAP BYTE -> PALATTE INDEX (default to 0)
-        self.byte_to_idx = np.zeros(256, dtype=np.int16)
-
-        ## ENSURE CHARACTERS ARE LENGTH 1 STRINGS
-        chars = [str(c) for c in self.palatte.tolist()]
-        for i, ch in enumerate(chars):
-            o = ord(ch)
-            if 0 <= o < 256:
-                self.byte_to_idx[o] = i
-
-        ## RENDER EACH GLYPH ONCE INTO A SMALL TILE: (N, H, W)
-        glyphs = np.empty((len(chars), self.glyph_h, self.glyph_w), dtype=np.uint8)
-        for i, ch in enumerate(chars):
-            im = Image.new("L", (self.glyph_w, self.glyph_h), color=self.background_color)
-            d = ImageDraw.Draw(im)
-            d.text((0,0), ch, fill=self.character_color, font=self.font)
-            glyphs[i] = np.asarray(im, dtype=np.uint8)
-        return glyphs  # (N, gh, gw)
-
-
-    def render(self, char_idxs_2d: np.ndarray) -> np.ndarray:
-        """
-        Fast renderer: given (rows, cols) palette indices, return uint8 grayscale frame.
-        """
-        ## char_idxs_2d: (rows, cols) values in [0, N)
-        ## (rows, cols, gh, gw)
-        tiles = self.glyphs[char_idxs_2d]  
-        ## STITCH TILES -> (rows*gh, cols*gw)
-        frame = tiles.transpose(0, 2, 1, 3).reshape(
-            char_idxs_2d.shape[0] * self.glyph_h,
-            char_idxs_2d.shape[1] * self.glyph_w,
-        )
-        return frame
-
-    def pixels_to_characters(self, img: torch.Tensor) -> np.ndarray:
-        # img = (torch.Tensor(img) / 255) ** self.exposure
-        img_embd = self.conv(img[None, None, ...])[0].permute(1, 2, 0)
-        char_idxs = torch.cdist(img_embd, self.char_embd).argmin(dim=-1)  # (rows, cols)
-        return char_idxs.cpu().numpy().astype(np.int32)
-
-    def convert_image(self) -> None: 
-        img = Image.open(self.input_path)
-        img = self.reshape_image(img)
-        img = torch.Tensor(np.array(img) / 255)
-        img = expose_contrast(img, self.exposure, self.contrast, brightness=self.brightness)
-        char_idxs = self.pixels_to_characters(img)  # (rows, cols)
-
-        if self.output_mode == "text":
-            # emit text file (optional: convert indices to chars)
-            with open(self.output_path, "w") as f:
-                for row in char_idxs:
-                    f.write("".join(self.palatte[row]))
-                    f.write("\n")
-            return
-
-        ascii_frame = self.render(char_idxs)
-        Image.fromarray(ascii_frame).save(self.output_path)
-        return
     
 
     def crop_frame(self, target_size:tuple, frame:np.ndarray) -> np.ndarray:
@@ -231,6 +183,32 @@ class AsciiConverter:
         return frame
 
 
+    def convert_image(self) -> None: 
+        img = Image.open(self.input_path)
+        img = self.reshape_image(img)
+        img = torch.Tensor(np.array(img) / 255)
+        # img = lift_shadows(img)
+        img = expose_contrast(
+            img, 
+            self.exposure, 
+            self.contrast, 
+            0.3,
+            self.brightness)
+        char_idxs = self.recall_char(img)  # (rows, cols)
+        Image.fromarray((img*255).to(torch.uint8).numpy()).save(self.output_path.replace("-ascii.","-base."))
+
+        if self.output_mode == "text":
+            # emit text file (optional: convert indices to chars)
+            with open(self.output_path, "w") as f:
+                for row in char_idxs:
+                    f.write("".join(self.palette[row]))
+                    f.write("\n")
+            return
+
+        ascii_frame = self.render(char_idxs)
+        return Image.fromarray(ascii_frame).save(self.output_path)
+    
+
     def convert_video(self) -> None:
         cap = cv2.VideoCapture(self.input_path)
         if not cap.isOpened():
@@ -250,9 +228,11 @@ class AsciiConverter:
             if not ok or frame is None:
                 break
 
-            grayscale_frame = self.reshape_image(frame)
-            char_idxs = self.pixels_to_characters(grayscale_frame)  # (rows, cols)
-            ascii_frame = self.render(char_idxs)                    # (H, W) uint8
+            img = self.reshape_image(frame)
+            img = torch.Tensor(np.array(img) / 255)
+            img = expose_contrast(img, self.exposure, self.contrast, brightness=self.brightness)
+            char_idxs = self.recall_char(img)  
+            ascii_frame = self.render(char_idxs) 
 
             h, w = ascii_frame.shape[:2]
 
@@ -277,7 +257,7 @@ class AsciiConverter:
             out.release()
         cv2.destroyAllWindows()
         return
-
+    
 
 def required_in_size(out_size: int, k: int, p: int, s: int) -> int:
     # minimal input that produces exactly out_size (for dilation=1)
