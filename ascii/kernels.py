@@ -15,8 +15,8 @@ def flatten_kernel(weight, width, height, **kwargs) -> torch.Tensor:
     return torch.nn.Parameter(filters, requires_grad=False)
 
 
-def shape_kernel(weight, width, height, **kwargs) -> torch.Tensor:
-    ## KERNEL EFFECTIVELY FLATTENS THE PATCH INTO A VECTOR
+def default_kernel(weight, width, height, **kwargs) -> torch.Tensor:
+    ## KERNEL USES HAND-CRAFTED FILTERS TO PULL OUT CHARACTER FEATURES
     in_channels = 1
     out_channels = 34
     size = (height, width)
@@ -159,59 +159,9 @@ def shape_kernel(weight, width, height, **kwargs) -> torch.Tensor:
     return torch.nn.Parameter(filters, requires_grad=False)
 
 
-def default_kernel(weight:int, **kwargs) -> torch.Tensor:
-    return torch.nn.Parameter(torch.Tensor([[
-        [
-            [0,    0,    0,    0,    0],
-            [0,    0,    1,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-        ],
-        [
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [1,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-        ],
-        [
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    1,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-        ],
-        [
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    1],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-        ],
-        [
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    1,    0,    0],
-            [0,    0,    0,    0,    0],
-        ],
-        [
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,  weight, 0,    0],
-            [0,    0,    0,    0,    0],
-            [0,    0,    0,    0,    0],
-        ],
-    ]]).transpose(1,0), requires_grad=False)
-
-
-
-
 KERNELS = {
-    "default": default_kernel,
     "flatten": flatten_kernel,
-    "shape":     shape_kernel,
+    "default": default_kernel,
 }
 
 

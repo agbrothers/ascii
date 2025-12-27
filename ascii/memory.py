@@ -23,7 +23,7 @@ class AsciiMemory:
         weight:float,
         font:ImageFont.FreeTypeFont,
         color:str="b",
-        kernel:str="shape",
+        kernel:str="default",
         sim:str="dist",
     ):
         ## PARSE ARGS
@@ -65,17 +65,17 @@ class AsciiMemory:
             self.conv.bias[:] = 0
 
         ## THE RENDERED CHARACTERS ARE OUR MEMORY VALUES
-        self.char_values = self.get_char_values()
+        self.char_values = self.get_char_values(self.palette)
 
         ## DERIVE KEYS FROM EACH CHARACTER'S PIXELS
         self.char_keys = self.get_char_keys(self.char_values) 
         return
 
 
-    def get_char_values(self) -> np.ndarray:
+    def get_char_values(self, palette) -> np.ndarray:
         ## RENDER EACH CHARACTER GLYPH (ONCE) INTO A SMALL TILE: (N, H, W)
-        glyphs = np.zeros((len(self.palette), self.glyph_h, self.glyph_w), dtype=np.uint8)
-        for i,char in enumerate(self.palette):
+        glyphs = np.zeros((len(palette), self.glyph_h, self.glyph_w), dtype=np.uint8)
+        for i,char in enumerate(palette):
             im = Image.new("L", size=(self.glyph_w, self.glyph_h), color=self.background_color)
             d = ImageDraw.Draw(im)
             d.text((0,0), char, fill=self.character_color, font=self.font)
