@@ -1,38 +1,18 @@
 import os
 import cv2
 import argparse
+
 from PIL import Image, ImageFont, UnidentifiedImageError
 
-from ascii.converter import AsciiConverter
+from ascii.memory import AsciiMemory
+from ascii.image import convert_image
+from ascii.video import convert_video
 
 
 
 FONTS = {
     "Menlo": "fonts/Menlo-Regular.ttf",
 }
-
-def get_filetype(path:str):
-    ## IS THIS A VALID IMAGE FILE?
-    try:
-        with Image.open(path) as im:
-            im.load()  
-        return "image"
-    except (UnidentifiedImageError, OSError, ValueError):
-        pass
-
-    ## IS THIS A VALID VIDEO FILE?
-    cap = cv2.VideoCapture(path)
-    try:
-        if not cap.isOpened():
-            return "invalid"
-        ok, frame = cap.read()
-        if ok and frame is not None and frame.size > 0:
-            return "video"
-        return "invalid"
-    finally:
-        cap.release()
-
-
 
 def main():
 
@@ -75,17 +55,54 @@ def main():
         f"Invalid filetype {os.path.basename(args.path)}, could not be loaded as an image or video."
 
     font_path = os.path.join(project_root, "ascii", FONTS[args.font])
-    args.font = ImageFont.truetype(font_path, size=args.font_size) 
-    converter = AsciiConverter(**vars(args))
+    font = ImageFont.truetype(font_path, size=args.font_size) 
+
+    ## BUILD MEMORY FROM ASCII PALATE
+    memory = AsciiMemory(
+        ascii_palette=args.ascii_palette,
+        ascii_chars=args.ascii_chars,
+        weight=args.weight,
+        color=args.color,
+        font=font
+    )
+    conversion_args = {
+        "path":args.path,
+        "memory":memory,
+        "exposure":args.exposure,
+        "contrast":args.contrast,
+        "brightness":args.brightness,
+        "chars_per_line":args.chars_per_line,
+    }
 
     ## CONVERT INPUT FILE
     if filetype == "image":
-        converter.convert_image()
-        print(f"Image saved to {converter.output_path}")
+        convert_image(**conversion_args, output_mode=args.output_mode)
     elif filetype == "video":
-        converter.convert_video()
-        print(f"Video saved to {converter.output_path}")
+        convert_video(**conversion_args)
     return
+
+
+def get_filetype(path:str):
+    ## IS THIS A VALID IMAGE FILE?
+    try:
+        with Image.open(path) as im:
+            im.load()  
+        return "image"
+    except (UnidentifiedImageError, OSError, ValueError):
+        pass
+
+    ## IS THIS A VALID VIDEO FILE?
+    cap = cv2.VideoCapture(path)
+    try:
+        if not cap.isOpened():
+            return "invalid"
+        ok, frame = cap.read()
+        if ok and frame is not None and frame.size > 0:
+            return "video"
+        return "invalid"
+    finally:
+        cap.release()
+
 
 
 if __name__ == "__main__":

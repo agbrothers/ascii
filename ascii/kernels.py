@@ -1,5 +1,4 @@
 import torch
-import numpy as np
 
 
 def flatten_kernel(weight, width, height, **kwargs) -> torch.Tensor:
