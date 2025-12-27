@@ -43,7 +43,7 @@ def main():
                         help='Control image exposure prior to conversion, the closer to zero the brighter the image.')
     parser.add_argument('-w', '--weight', type=float, default=10, 
                         help='Control the weighting of individual pixels vs surrounding neighbors.')
-    parser.add_argument('-fs', '--font_size', type=int, default=24, 
+    parser.add_argument('-fs', '--font_size', type=int, default=12, 
                         help='Font size.')
     args = parser.parse_args()
 

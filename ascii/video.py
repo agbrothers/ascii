@@ -18,7 +18,6 @@ def convert_video(
     ) -> None:
     output_path, extension = os.path.splitext(path)
     output_path = output_path + "-ascii" + extension
-    output_mode = output_mode
     input_path = path
 
     cap = cv2.VideoCapture(input_path)
@@ -35,16 +34,15 @@ def convert_video(
     size = None  # (w, h)
 
     for _ in trange(frame_count):
-        ok, frame = cap.read()
-        if not ok or frame is None:
+        ok, img = cap.read()
+        if not ok or img is None:
             break
 
         img = reshape_image(img, chars_per_line, memory)
-        img = torch.Tensor(np.array(img) / 255)
-        img = expose_contrast(img, exposure, contrast, brightness=brightness)
-        char_idxs = memory.recall_char(img)  
-        ascii_frame = memory.render(char_idxs) 
-        # ascii_frame = memory(img)
+        frame = torch.Tensor(np.array(img) / 255)
+        # frame = lift_shadows(frame)
+        frame = expose_contrast(frame, exposure, contrast, brightness=brightness)
+        ascii_frame = memory(frame)
         h, w = ascii_frame.shape[:2]
 
         if out is None:
