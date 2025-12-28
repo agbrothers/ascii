@@ -1,6 +1,12 @@
 ### Converting Images to ASCII using 
 # Convolutions & Associative Memory
 
+<p align="center">
+  <img src="content/steve-jobs.png" width="45%" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="content/steve-jobs-ascii.png" width="45%" />
+</p>
+
 ### Install:
 
 ```
@@ -9,6 +15,10 @@ pip install "git+https://github.com/agbrothers/ascii.git"
 
 ### Run: 
 Simply type the keyword `asciify` followed by the image/video filepath to convert it to an ascii representation. The parameters at the end of this README can be passed to tweak the result. 
+
+```
+asciify -p=/path/to/ascii/content/steve-jobs.png -d=200 -e=.5 -b=1 -w=5 -con=4
+```
 
 ```
 asciify -p=/path/to/ascii/content/einstein.png -e=0.23 -d=200 -w=10 
