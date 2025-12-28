@@ -17,15 +17,15 @@ pip install "git+https://github.com/agbrothers/ascii.git"
 Simply type the keyword `asciify` followed by the image/video filepath to convert it to an ascii representation. The parameters at the end of this README can be passed to tweak the result. 
 
 ```
-asciify -p=/path/to/ascii/content/steve-jobs.png  -d=200 -e=.35 -b=0.95 -w=10 -con=4
+asciify -p=/path/to/ascii/content/steve-jobs.png -r=200 -e=.35 -b=0.95 -w=10 -con=4
 ```
 
 ```
-asciify -p=/path/to/ascii/content/einstein.png -e=0.23 -d=200 -w=10 
+asciify -p=/path/to/ascii/content/einstein.png -e=0.23 -r=200 -w=10 
 ```
 
 ```
-asciify -p=/path/to/ascii/content/obama.png -d=200 -e=.3 -b=0.95 -w=10 -con=5
+asciify -p=/path/to/ascii/content/obama.png -r=200 -e=.3 -b=0.95 -w=10 -con=5
 ```
 
 
@@ -53,7 +53,7 @@ There is no learning going on with this algorithm. The implementation pursued he
 
 ### Parameters: 
 ```
-asciify -p=./ascii/content/einstein.png -e=0.20 -d=150 -c=b
+asciify -p=./ascii/content/einstein.png -e=0.20 -r=150 -c=b
 ```
 
   `-p` `--path`, `[type=str]` 

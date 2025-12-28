@@ -33,8 +33,8 @@ def main():
                         help='Options: [`w`, `b`]. Color the characters `w` white or `b` black.')
     parser.add_argument('-m', '--output_mode', type=str, default="default",
                         help='Options: [`text`, `default`]. Save the result to a .txt file or default to the input file type.')
-    parser.add_argument('-d', '--chars_per_line', type=int, default=200, 
-                        help='Width of the output image in number of characters.')
+    parser.add_argument('-r', '--chars_per_line', type=int, default=200, 
+                        help='Resolution of the output image in number of characters per line.')
     parser.add_argument('-b', '--brightness', type=float, default=0.0, 
                         help='Control image exposure prior to conversion, the closer to zero the brighter the image.')
     parser.add_argument('-e', '--exposure', type=float, default=1.0, #0.25, 
