@@ -21,11 +21,10 @@ dependencies = [
     "opencv-python",
 ]
 [tool.setuptools.packages.find]
-include = ["ascii"]
+include = ["ascii", "ascii.*"]
 
 [tool.setuptools.package-data]
-# Include all .ttf files within the "fonts" directory of "mypackage"
-"mypackage" = ["fonts/*.ttf"]
+ascii = ["fonts/*.ttf"]
 
 [project.scripts]
 asciify = "ascii.asciify:main"
