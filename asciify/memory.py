@@ -90,15 +90,16 @@ class AsciiMemory:
 
 
     def recall_char(self, queries:torch.Tensor) -> torch.IntTensor:
-        ## LOOK UP THE CHARACTER WITH THE GREATEST SIMILARITY 
-        if self.sim == "dist":
-            char_sim = -torch.cdist(queries, self.char_keys) # (negative euclidean distance)
-        elif self.sim == "dot":
-            char_sim = queries @ (self.char_keys).T        # (dot product)
-        elif self.sim == "cosine":
+        ## HARD ATTENTION/ASSOCIATION: 
+        ## Look up the character with the greatest similarity 
+        if self.sim == "dist":      # (negative euclidean distance)
+            char_sim = -torch.cdist(queries, self.char_keys) 
+        elif self.sim == "dot":     # (dot product)
+            char_sim = queries @ (self.char_keys).T        
+        elif self.sim == "cosine":  # (cosine similarity)
             key_norm = self.char_keys.norm(dim=-1, keepdim=True)
-            query_norm = self.queries.norm(dim=-1, keepdim=True)
-            char_sim = (queries/query_norm) @ (self.char_keys/key_norm).T   # (cosine sim)
+            query_norm = queries.norm(dim=-1, keepdim=True)
+            char_sim = (queries/query_norm) @ (self.char_keys/key_norm).T   
         ## RETURN IDX OF THE MOST SIMILAR CHARACTER FOR EACH PATCH
         return char_sim.argmax(dim=-1) 
 

@@ -45,6 +45,8 @@ def main():
                         help='Control the weighting of individual pixels vs surrounding neighbors.')
     parser.add_argument('-fs', '--font_size', type=int, default=12, 
                         help='Font size.')
+    parser.add_argument('-sim', '--similarity', type=str, default="dist", 
+                        help='Options: [`dist`, `dot`, `cosine`]. Similarity metric to use for association.')
     args = parser.parse_args()
 
     ## VALIDATE INPUT FILE
@@ -63,7 +65,8 @@ def main():
         ascii_chars=args.ascii_chars,
         weight=args.weight,
         color=args.color,
-        font=font
+        font=font,
+        sim=args.similarity,
     )
     conversion_args = {
         "path":args.path,

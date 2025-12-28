@@ -92,4 +92,6 @@ asciify -p=./asciify/content/einstein.png -e=0.20 -r=150 -c=b
   `-fs` `--font_size` `[type=int]` 
   <br/> Font size.
 
+  `-sim` `--similarity` `[type=str]`
+  <br/> Options: [`dist`, `dot`, `cosine`]. Similarity metric to use for association.
 
