@@ -22,7 +22,10 @@ dependencies = [
 ]
 [tool.setuptools.packages.find]
 include = ["ascii"]
-# exclude = ["content"]
+
+[tool.setuptools.package-data]
+# Include all .ttf files within the "fonts" directory of "mypackage"
+"mypackage" = ["fonts/*.ttf"]
 
 [project.scripts]
 asciify = "ascii.asciify:main"
