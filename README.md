@@ -10,7 +10,7 @@
 ### Install:
 
 ```
-pip install "git+https://github.com/agbrothers/ascii.git"
+pip install "git+https://github.com/agbrothers/asciify.git"
 ```
 
 ### Run: 
