@@ -3,7 +3,7 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ascii"
+name = "asciify"
 version = "1.0.0"
 description = "Produce ascii character representations of images and videos."
 readme = "README.md"
@@ -21,14 +21,14 @@ dependencies = [
     "opencv-python",
 ]
 [tool.setuptools.packages.find]
-include = ["ascii", "ascii.*"]
+include = ["asciify", "asciify.*"]
 
 [tool.setuptools.package-data]
-ascii = ["fonts/*.ttf"]
+asciify = ["fonts/*.ttf"]
 
 [project.scripts]
-asciify = "ascii.asciify:main"
+asciify = "asciify.run:main"
 
 [project.urls]
-Homepage = "https://github.com/agbrothers/ascii"
-Issues = "https://github.com/agbrothers/ascii/issues"
+Homepage = "https://github.com/agbrothers/asciify"
+Issues = "https://github.com/agbrothers/asciify/issues"

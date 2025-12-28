@@ -4,8 +4,8 @@ import torch
 import numpy as np
 from tqdm import trange
 
-from ascii.preprocess import expose_contrast, reshape_image, crop_frame
-from ascii.memory import AsciiMemory
+from asciify.preprocess import expose_contrast, reshape_image, crop_frame
+from asciify.memory import AsciiMemory
 
 
 def convert_video(

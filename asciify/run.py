@@ -4,9 +4,9 @@ import argparse
 
 from PIL import Image, ImageFont, UnidentifiedImageError
 
-from ascii.memory import AsciiMemory
-from ascii.image import convert_image
-from ascii.video import convert_video
+from asciify.memory import AsciiMemory
+from asciify.image import convert_image
+from asciify.video import convert_video
 
 
 
@@ -54,7 +54,7 @@ def main():
     assert filetype != "unknown", \
         f"Invalid filetype {os.path.basename(args.path)}, could not be loaded as an image or video."
 
-    font_path = os.path.join(project_root, "ascii", FONTS[args.font])
+    font_path = os.path.join(project_root, "asciify", FONTS[args.font])
     font = ImageFont.truetype(font_path, size=args.font_size) 
 
     ## BUILD MEMORY FROM ASCII PALATE

@@ -3,8 +3,8 @@ import numpy as np
 
 from PIL import Image, ImageDraw, ImageFont
 
-from ascii.kernels import KERNELS
-from ascii.palettes import PALETTES
+from asciify.kernels import KERNELS
+from asciify.palettes import PALETTES
 
 
 class AsciiMemory:

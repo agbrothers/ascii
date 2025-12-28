@@ -3,8 +3,8 @@ import torch
 import numpy as np
 from PIL import Image
 
-from ascii.preprocess import expose_contrast, reshape_image
-from ascii.memory import AsciiMemory
+from asciify.preprocess import expose_contrast, reshape_image
+from asciify.memory import AsciiMemory
 
 
 def convert_image(

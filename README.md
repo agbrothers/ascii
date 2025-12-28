@@ -17,15 +17,15 @@ pip install "git+https://github.com/agbrothers/ascii.git"
 Simply type the keyword `asciify` followed by the image/video filepath to convert it to an ascii representation. The parameters at the end of this README can be passed to tweak the result. 
 
 ```
-asciify -p=/path/to/ascii/content/steve-jobs.png -r=200 -e=.35 -b=0.95 -w=10 -con=4
+asciify -p=/path/to/asciify/content/steve-jobs.png -r=200 -e=.35 -b=0.95 -w=10 -con=4
 ```
 
 ```
-asciify -p=/path/to/ascii/content/einstein.png -e=0.23 -r=200 -w=10 
+asciify -p=/path/to/asciify/content/einstein.png -e=0.23 -r=200 -w=10 
 ```
 
 ```
-asciify -p=/path/to/ascii/content/obama.png -r=200 -e=.3 -b=0.95 -w=10 -con=5
+asciify -p=/path/to/asciify/content/obama.png -r=200 -e=.3 -b=0.95 -w=10 -con=5
 ```
 
 
@@ -53,20 +53,20 @@ There is no learning going on with this algorithm. The implementation pursued he
 
 ### Parameters: 
 ```
-asciify -p=./ascii/content/einstein.png -e=0.20 -r=150 -c=b
+asciify -p=./asciify/content/einstein.png -e=0.20 -r=150 -c=b
 ```
 
   `-p` `--path`, `[type=str]` 
   <br/> Path to the image or video to be converted
 
   `-ap` `--ascii_palette` `[type=str]` 
-  <br/> Name of a pre-defined ASCII characters palette to build the image from, in `ascii/palettes.py`
+  <br/> Name of a pre-defined ASCII characters palette to build the image from, in `asciify/palettes.py`
 
   `-ac` `--ascii_chars` `[type=str]` 
   <br/> A string of characters to build the image from. Note, this overrides the --ascii_palette selection.
 
   `-f` `--font` `[type=str]` 
-  <br/> Options: [`Menlo`]. Assuming a monospace font stored in ascii/fonts/ 
+  <br/> Options: [`Menlo`]. Assuming a monospace font stored in asciify/fonts/ 
 
   `-c` `--color` `[type=str]` 
   <br/> Options: [`w`, `b`]. Color the characters `w` white or `b` black.
