@@ -17,7 +17,7 @@ pip install "git+https://github.com/agbrothers/ascii.git"
 Simply type the keyword `asciify` followed by the image/video filepath to convert it to an ascii representation. The parameters at the end of this README can be passed to tweak the result. 
 
 ```
-asciify -p=/path/to/ascii/content/steve-jobs.png -d=200 -e=.5 -b=1 -w=5 -con=4
+asciify -p=/path/to/ascii/content/steve-jobs.png  -d=200 -e=.35 -b=0.95 -w=10 -con=4
 ```
 
 ```
@@ -25,7 +25,7 @@ asciify -p=/path/to/ascii/content/einstein.png -e=0.23 -d=200 -w=10
 ```
 
 ```
-asciify -p=/path/to/ascii/content/obama.png -d=200 -e=.35 -b=0.85 -w=20 -con=4
+asciify -p=/path/to/ascii/content/obama.png -d=200 -e=.3 -b=0.95 -w=10 -con=5
 ```
 
 
@@ -48,7 +48,7 @@ asciify -p=/path/to/ascii/content/obama.png -d=200 -e=.35 -b=0.85 -w=20 -con=4
 > 
 
 <br/>
-There is no learning going on with this algorithm. The implementation pursued here is nonetheless deeply connected with a number of core concepts from machine learning, including convolutional neural networks, associative memories, and even attention. Below I will walk through these big ideas, how they connect to a simple ASCII image converter, and why this is actually a desireable use case. 
+There is no learning going on with this algorithm. The implementation pursued here is nonetheless deeply connected with a number of core concepts from machine learning, including convolutional neural networks, associative memories, and even attention. [TODO] Below I will walk through these big ideas, how they connect to a simple ASCII image converter, and why this is actually a desireable use case. 
 
 
 ### Parameters: 
