@@ -31,19 +31,19 @@ asciify -p=/path/to/ascii/content/obama.png -r=200 -e=.3 -b=0.95 -w=10 -con=5
 
 
 
-### Approach:
+### Implementation:
 >
-> 1. Render each character as a 2D array called a glyph. 
+> 1. Render each character as a 2D array called a glyph, ~15x8 pixels with the default font size. 
 > 
-> 2. Apply a hand-crafted 2D convolution to each glyph, having a kernel the same dimensions of each character. This pulls out features corresponding to each characters shape and brightness. 
+> 2. Apply a hand-crafted 2D convolution to each glyph to pull out a feature vector corresponding to the character's shape and brightness. *NOTE*: We use a kernel with the same dimensions and stride of each character glyph.  
 > 
-> 3. Store the set of glyphs as the values and the set of convolutional features as keys in a memory. 
+> 3. Store the set of convolutional feature vectors as keys and the glyph arrays as values in a hetero-associative memory. 
 > 
-> 4. Given an image, partition it into patches the size of our character glyphs. Apply the convolution to each patch to generate a feature query for ASCII memory. 
+> 4. Given an image, partition it into patches the size of our character glyphs. Apply the convolution to each patch to generate a query feature vector. 
 > 
-> 5. Each pixel match associates with the most similar ASCII character key, then retrieves the corresponding glyph from the memory store. 
+> 5. Compute the similarity between the queries and keys in the ASCII memory (negative distance by default), then retrieve the most similar glyph. 
 > 
-> 6. The retrieved glyphes are inserted where the pixel patches used to be, yielding the converted image. 
+> 6. Insert the retrieved glyphs where each query patch used to be, yielding the converted image. 
 > 
 > 
 
