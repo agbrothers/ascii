@@ -25,7 +25,7 @@ def convert_video(
         raise RuntimeError(f"Could not open input video: {input_path}")
 
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    fourcc = cv2.VideoWriter_fourcc(*"avc1")
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not fps or fps != fps or fps <= 0:
         fps = 30.0
