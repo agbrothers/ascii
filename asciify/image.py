@@ -3,8 +3,8 @@ import torch
 import numpy as np
 from PIL import Image
 
-from asciify.preprocess import expose_contrast, reshape_image
 from asciify.memory import AsciiMemory
+from asciify.utils.preprocess import expose_contrast, reshape_image
 
 
 def convert_image(
@@ -31,11 +31,11 @@ def convert_image(
         contrast, 
         0.3,
         brightness)
-    ascii_frame = memory(frame)  # (rows, cols)
-    # Image.fromarray((frame*255).to(torch.uint8).numpy()).save(output_path.replace("-ascii.","-base."))
+    ascii_frame = memory(frame) 
 
     if output_mode == "text":
         # emit text file (optional: convert indices to chars)
+        output_path = output_path.replace(extension, ".txt")
         with open(output_path, "w") as f:
             for row in memory.char_idxs:
                 f.write("".join(memory.palette[row]))

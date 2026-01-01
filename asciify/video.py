@@ -4,8 +4,8 @@ import torch
 import numpy as np
 from tqdm import trange
 
-from asciify.preprocess import expose_contrast, reshape_image, crop_frame
 from asciify.memory import AsciiMemory
+from asciify.utils.preprocess import expose_contrast, reshape_image, crop_frame
 
 
 def convert_video(
@@ -17,7 +17,7 @@ def convert_video(
         chars_per_line:int
     ) -> None:
     output_path, extension = os.path.splitext(path)
-    output_path = output_path + "-ascii" + extension
+    output_path = output_path + "-ascii.mp4" # + extension
     input_path = path
 
     cap = cv2.VideoCapture(input_path)
@@ -37,10 +37,9 @@ def convert_video(
         ok, img = cap.read()
         if not ok or img is None:
             break
-
+        # img = img.transpose((1,0,2))[:, ::-1]
         img = reshape_image(img, chars_per_line, memory)
         frame = torch.Tensor(np.array(img) / 255)
-        # frame = lift_shadows(frame)
         frame = expose_contrast(frame, exposure, contrast, brightness=brightness)
         ascii_frame = memory(frame)
         h, w = ascii_frame.shape[:2]
@@ -57,7 +56,7 @@ def convert_video(
         if (w, h) != size:
             ascii_frame = crop_frame(size, ascii_frame)
 
-        # most portable: write as BGR
+        ## WRITE FRAME
         ascii_bgr = cv2.cvtColor(ascii_frame, cv2.COLOR_GRAY2BGR)
         out.write(np.ascontiguousarray(ascii_bgr))
 
