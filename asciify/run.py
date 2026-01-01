@@ -7,6 +7,7 @@ from PIL import Image, ImageFont, UnidentifiedImageError
 from asciify.memory import AsciiMemory
 from asciify.image import convert_image
 from asciify.video import convert_video
+from asciify.animate import animate_image
 
 
 
@@ -18,10 +19,10 @@ def main():
 
     # PARSE ARGUMENTS
     project_root = os.path.dirname(os.path.dirname(__file__))
-    default_path = os.path.join(project_root, "content/test-image.png")
+    # default_path = os.path.join(project_root, "content/einstein.png")
 
     parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('-p', '--path', type=str, default=default_path, 
+    parser.add_argument('-p', '--path', type=str, required=True, #default=default_path, 
                         help='Path to the image or video to be converted')
     parser.add_argument('-ap', '--ascii_palette', type=str, default="default",
                         help='Name of a pre-defined ASCII characters palette to build the image from, in `ascii/palettes.py`.')
@@ -32,14 +33,14 @@ def main():
     parser.add_argument('-c', '--color', type=str, default='b', 
                         help='Options: [`w`, `b`]. Color the characters `w` white or `b` black.')
     parser.add_argument('-m', '--output_mode', type=str, default="default",
-                        help='Options: [`text`, `default`]. Save the result to a .txt file or default to the input file type.')
+                        help='Options: [`default`, `text`, `animate`]. Save the result to a .txt file or default to the input file type.')
     parser.add_argument('-r', '--chars_per_line', type=int, default=200, 
                         help='Resolution of the output image in number of characters per line.')
-    parser.add_argument('-b', '--brightness', type=float, default=0.0, 
+    parser.add_argument('-b', '--brightness', type=float, default=0.95, 
                         help='Control image exposure prior to conversion, the closer to zero the brighter the image.')
-    parser.add_argument('-e', '--exposure', type=float, default=1.0, #0.25, 
+    parser.add_argument('-e', '--exposure', type=float, default=0.25, 
                         help='Control image exposure prior to conversion, the closer to zero the brighter the image.')
-    parser.add_argument('-con', '--contrast', type=float, default=1.0, 
+    parser.add_argument('-con', '--contrast', type=float, default=4.0, 
                         help='Control image exposure prior to conversion, the closer to zero the brighter the image.')
     parser.add_argument('-w', '--weight', type=float, default=10, 
                         help='Control the weighting of individual pixels vs surrounding neighbors.')
@@ -77,9 +78,16 @@ def main():
         "chars_per_line":args.chars_per_line,
     }
 
+
     ## CONVERT INPUT FILE
     if filetype == "image":
-        convert_image(**conversion_args, output_mode=args.output_mode)
+        ## ANIMATE THE IMAGE CONVERSION PROCESS
+        if args.output_mode == "animate":
+            animate_image(**conversion_args)
+        ## ONE-SHOT CONVERT THE IMAGE
+        else:
+            convert_image(**conversion_args, output_mode=args.output_mode)
+        ## CONVERT EACH VIDEO FRAME
     elif filetype == "video":
         convert_video(**conversion_args)
     return
